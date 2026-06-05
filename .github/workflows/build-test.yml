@@ -33,6 +33,7 @@ jobs:
             -p "fly-${{ env.FLY_VERSION }}-linux-x86_64.tar.gz"
           sudo tar -xzf fly-${{ env.FLY_VERSION }}-linux-x86_64.tar.gz \
             -C /usr/local/bin
+          sudo chmod +x /usr/local/bin/fly*
 
       - name: Build with flyp
         run: flyp build --release
