@@ -1,0 +1,44 @@
+// Test: Context and Module lifecycle — the foundation of every compilation unit.
+// Verifies contextCreate, moduleCreateWithNameInContext, verifyModule, dispose.
+
+namespace llvm.api.test.context
+
+import llvm.api.*
+import fly.assert
+import fly.mem
+
+void main() {
+    
+    LLVM llvm = new LLVM()
+
+    // ── Context ───────────────────────────────────────────────────────────────
+
+    fly.mem.Ptr ctx
+    llvm.contextCreate(ctx)
+    fly.assert.assertTrue(ctx.addr != 0, 1)   // context must be non-null
+
+    // ── Module creation ───────────────────────────────────────────────────────
+
+    fly.mem.Ptr mod
+    llvm.moduleCreateWithNameInContext("test_module", ctx, mod)
+    fly.assert.assertTrue(mod.addr != 0, 2)   // module must be non-null
+
+    // ── Module verification (empty module must be valid) ──────────────────────
+
+    bool ok = false
+    llvm.verifyModule(mod, ok)
+    fly.assert.assertTrue(ok, 3)
+
+    // ── Global context (always available) ────────────────────────────────────
+
+    fly.mem.Ptr gctx
+    llvm.getGlobalContext(gctx)
+    fly.assert.assertTrue(gctx.addr != 0, 4)
+
+    // ── Dispose ───────────────────────────────────────────────────────────────
+
+    llvm.disposeModule(mod)
+    llvm.contextDispose(ctx)
+    // no crash = success
+    fly.assert.assertTrue(true, 5)
+}

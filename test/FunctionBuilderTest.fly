@@ -1,0 +1,94 @@
+// Test: Full function IR construction — core of the Fly CodeGen pipeline.
+// Uses 0-param function + constants (bridge limitation with type arrays).
+
+namespace llvm.api.test.function
+
+import llvm.api.*
+import fly.assert
+import fly.mem
+
+void main() {
+
+    LLVM llvm = new LLVM()
+    fly.mem.Ptr ctx
+    llvm.contextCreate(ctx)
+    fly.mem.Ptr mod
+    llvm.moduleCreateWithNameInContext("fn_test", ctx, mod)
+
+    // ── Types ─────────────────────────────────────────────────────────────────
+
+    fly.mem.Ptr i32
+    llvm.int32TypeInContext(ctx, i32)
+    fly.mem.Ptr fnTy
+    llvm.functionType(i32, i32, 0, false, fnTy)
+
+    // ── Function ──────────────────────────────────────────────────────────────
+
+    fly.mem.Ptr fn
+    llvm.addFunction(mod, "add", fnTy, fn)
+    fly.assert.assertTrue(fn.addr != 0, 1)
+
+    // ── Basic block ───────────────────────────────────────────────────────────
+
+    fly.mem.Ptr entry
+    llvm.appendBasicBlockInContext(ctx, fn, "entry", entry)
+    fly.assert.assertTrue(entry.addr != 0, 4)
+
+    fly.mem.Ptr builder
+    llvm.createBuilderInContext(ctx, builder)
+    fly.assert.assertTrue(builder.addr != 0, 5)
+    llvm.positionBuilderAtEnd(builder, entry)
+
+    // Verify getInsertBlock returns entry
+    fly.mem.Ptr insertBlock
+    llvm.getInsertBlock(builder, insertBlock)
+    fly.assert.assertTrue(insertBlock.addr != 0, 6)
+
+    // Verify getBasicBlockParent returns fn
+    fly.mem.Ptr parent
+    llvm.getBasicBlockParent(entry, parent)
+    fly.assert.assertTrue(parent.addr != 0, 7)
+
+    // ── Build with constants ──────────────────────────────────────────────────
+
+    fly.mem.Ptr c1
+    llvm.constInt(i32, 3, false, c1)
+    fly.assert.assertTrue(c1.addr != 0, 2)
+    fly.mem.Ptr c2
+    llvm.constInt(i32, 4, false, c2)
+    fly.assert.assertTrue(c2.addr != 0, 3)
+
+    fly.mem.Ptr sum
+    llvm.buildAdd(builder, c1, c2, "sum", sum)
+    fly.assert.assertTrue(sum.addr != 0, 8)
+
+    // ── Build: return sum ─────────────────────────────────────────────────────
+
+    fly.mem.Ptr ret
+    llvm.buildRet(builder, sum, ret)
+    fly.assert.assertTrue(ret.addr != 0, 9)
+
+    fly.assert.assertTrue(true, 10)
+
+    // ── getNamedFunction ──────────────────────────────────────────────────────
+
+    fly.mem.Ptr found
+    llvm.getNamedFunction(mod, "add", found)
+    fly.assert.assertTrue(found.addr != 0, 11)
+
+    // ── typeOf ────────────────────────────────────────────────────────────────
+
+    fly.mem.Ptr ty
+    llvm.typeOf(fn, ty)
+    fly.assert.assertTrue(ty.addr != 0, 12)
+
+    // ── Linkage and visibility ────────────────────────────────────────────────
+
+    llvm.setLinkage(fn, 0)
+    llvm.setVisibility(fn, 0)
+    fly.assert.assertTrue(true, 13)
+
+    llvm.disposeBuilder(builder)
+    llvm.disposeModule(mod)
+    llvm.contextDispose(ctx)
+}

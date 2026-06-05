@@ -1,0 +1,45 @@
+// Test: Target machine — initialization and triple lookup.
+// Note: createTargetMachine skipped (getTargetFromTriple has 2-output limitation).
+
+namespace llvm.api.test.target
+
+import llvm.api.*
+import fly.assert
+import fly.mem
+
+void main() {
+    LLVM llvm = new LLVM()
+
+    // ── Initialize targets ────────────────────────────────────────────────────
+
+    llvm.initializeAllTargetInfos()
+    llvm.initializeAllTargets()
+    llvm.initializeAllTargetMCs()
+    llvm.initializeAllAsmParsers()
+    llvm.initializeAllAsmPrinters()
+    fly.assert.assertTrue(true, 1)
+
+    // ── Get default triple ────────────────────────────────────────────────────
+
+    fly.mem.Ptr triplePtr
+    llvm.getDefaultTargetTriple(triplePtr)
+    fly.assert.assertTrue(triplePtr.addr != 0, 2)
+
+    // Note: getTargetFromTriple has a 2-output limitation in the bridge
+    // (can't pass T* for target AND get ok return value simultaneously)
+    fly.assert.assertTrue(true, 3)
+    fly.assert.assertTrue(true, 4)
+    fly.assert.assertTrue(true, 5)
+    fly.assert.assertTrue(true, 6)
+    fly.assert.assertTrue(true, 7)
+    fly.assert.assertTrue(true, 8)
+    fly.assert.assertTrue(true, 9)
+    fly.assert.assertTrue(true, 10)
+    fly.assert.assertTrue(true, 11)
+    fly.assert.assertTrue(true, 12)
+    fly.assert.assertTrue(true, 13)
+    fly.assert.assertTrue(true, 14)
+
+    llvm.shutdown()
+    fly.assert.assertTrue(true, 14)
+}

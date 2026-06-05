@@ -1,0 +1,100 @@
+// Test: Type creation — integer, float, void, pointer, array, struct.
+// All types used by the Fly CodeGen.
+
+namespace llvm.api.test.types
+
+import llvm.api.*
+import fly.assert
+import fly.mem
+
+void main() {
+    
+    LLVM llvm = new LLVM()
+    fly.mem.Ptr ctx
+    llvm.contextCreate(ctx)
+
+    // ── Integer types ─────────────────────────────────────────────────────────
+
+    fly.mem.Ptr i1
+    llvm.int1TypeInContext(ctx, i1)
+    fly.assert.assertTrue(i1.addr != 0, 1)
+
+    fly.mem.Ptr i8
+    llvm.int8TypeInContext(ctx, i8)
+    fly.assert.assertTrue(i8.addr != 0, 2)
+
+    fly.mem.Ptr i16
+    llvm.int16TypeInContext(ctx, i16)
+    fly.assert.assertTrue(i16.addr != 0, 3)
+
+    fly.mem.Ptr i32
+    llvm.int32TypeInContext(ctx, i32)
+    fly.assert.assertTrue(i32.addr != 0, 4)
+
+    fly.mem.Ptr i64
+    llvm.int64TypeInContext(ctx, i64)
+    fly.assert.assertTrue(i64.addr != 0, 5)
+
+    // Arbitrary-width integer
+    fly.mem.Ptr i128
+    llvm.intTypeInContext(ctx, 128, i128)
+    fly.assert.assertTrue(i128.addr != 0, 6)
+
+    // ── Float types ───────────────────────────────────────────────────────────
+
+    fly.mem.Ptr f32
+    llvm.floatTypeInContext(ctx, f32)
+    fly.assert.assertTrue(f32.addr != 0, 7)
+
+    fly.mem.Ptr f64
+    llvm.doubleTypeInContext(ctx, f64)
+    fly.assert.assertTrue(f64.addr != 0, 8)
+
+    // ── Void type ─────────────────────────────────────────────────────────────
+
+    fly.mem.Ptr voidTy
+    llvm.voidTypeInContext(ctx, voidTy)
+    fly.assert.assertTrue(voidTy.addr != 0, 9)
+
+    // ── Pointer type ──────────────────────────────────────────────────────────
+
+    fly.mem.Ptr ptrTy
+    llvm.pointerType(i64, 0, ptrTy)
+    fly.assert.assertTrue(ptrTy.addr != 0, 10)
+
+    // ── Array type ────────────────────────────────────────────────────────────
+
+    fly.mem.Ptr arrTy
+    llvm.arrayType(i32, 10, arrTy)
+    fly.assert.assertTrue(arrTy.addr != 0, 11)
+
+    // ── Named struct type ─────────────────────────────────────────────────────
+
+    fly.mem.Ptr structTy
+    llvm.structCreateNamed(ctx, "MyStruct", structTy)
+    fly.assert.assertTrue(structTy.addr != 0, 12)
+
+    // Set body: { i32 } - can only pass 1 type via bridge (no C array support)
+    llvm.structSetBody(structTy, i32, 1, false)
+    // no crash = body set correctly
+    fly.assert.assertTrue(true, 13)
+
+    // ── Anonymous struct type ─────────────────────────────────────────────────
+
+    fly.mem.Ptr anonStruct
+    llvm.structTypeInContext(ctx, i32, 1, false, anonStruct)
+    fly.assert.assertTrue(anonStruct.addr != 0, 14)
+
+    // ── Function type ─────────────────────────────────────────────────────────
+
+    fly.mem.Ptr fnTy
+    llvm.functionType(i32, i32, 1, false, fnTy)
+    fly.assert.assertTrue(fnTy.addr != 0, 15)
+
+    // void → void function type
+    fly.mem.Ptr voidFnTy
+    llvm.functionType(voidTy, voidTy, 0, false, voidFnTy)
+    fly.assert.assertTrue(voidFnTy.addr != 0, 16)
+
+    llvm.contextDispose(ctx)
+}

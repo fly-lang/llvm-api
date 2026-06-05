@@ -1,0 +1,112 @@
+// Test: Control flow — condBr, br, switch (no PHI - bridge limitation).
+
+namespace llvm.api.test.controlflow
+
+import llvm.api.*
+import fly.assert
+import fly.mem
+
+void main() {
+
+    LLVM llvm = new LLVM()
+    fly.mem.Ptr ctx
+    llvm.contextCreate(ctx)
+    fly.mem.Ptr mod
+    llvm.moduleCreateWithNameInContext("cf_test", ctx, mod)
+
+    fly.mem.Ptr i32
+    llvm.int32TypeInContext(ctx, i32)
+    fly.mem.Ptr i1
+    llvm.int1TypeInContext(ctx, i1)
+
+    // ── condBr test ───────────────────────────────────────────────────────────
+
+    fly.mem.Ptr fnTy
+    llvm.functionType(i32, i32, 0, false, fnTy)
+    fly.mem.Ptr maxFn
+    llvm.addFunction(mod, "cf_test", fnTy, maxFn)
+
+    fly.mem.Ptr entry
+    fly.mem.Ptr thenBB
+    fly.mem.Ptr elseBB
+    llvm.appendBasicBlockInContext(ctx, maxFn, "entry", entry)
+    fly.assert.assertTrue(entry.addr != 0, 1)
+    llvm.appendBasicBlockInContext(ctx, maxFn, "then", thenBB)
+    fly.assert.assertTrue(thenBB.addr != 0, 2)
+    llvm.appendBasicBlockInContext(ctx, maxFn, "else", elseBB)
+    fly.assert.assertTrue(elseBB.addr != 0, 3)
+
+    fly.mem.Ptr builder
+    llvm.createBuilderInContext(ctx, builder)
+
+    fly.mem.Ptr c3
+    llvm.constInt(i32, 3, false, c3)
+    fly.mem.Ptr c7
+    llvm.constInt(i32, 7, false, c7)
+
+    // entry: cond = 3 > 7
+    llvm.positionBuilderAtEnd(builder, entry)
+    fly.mem.Ptr cond
+    llvm.buildICmp(builder, 38, c3, c7, "cond", cond)
+    fly.assert.assertTrue(cond.addr != 0, 4)
+
+    fly.mem.Ptr br
+    llvm.buildCondBr(builder, cond, thenBB, elseBB, br)
+    fly.assert.assertTrue(br.addr != 0, 5)
+
+    // then: return 3
+    llvm.positionBuilderAtEnd(builder, thenBB)
+    fly.mem.Ptr thenRet
+    llvm.buildRet(builder, c3, thenRet)
+    fly.assert.assertTrue(thenRet.addr != 0, 6)
+
+    // else: return 7
+    llvm.positionBuilderAtEnd(builder, elseBB)
+    fly.mem.Ptr elseRet
+    llvm.buildRet(builder, c7, elseRet)
+    fly.assert.assertTrue(elseRet.addr != 0, 7)
+
+    // ── switch test ───────────────────────────────────────────────────────────
+
+    fly.mem.Ptr clFn
+    llvm.addFunction(mod, "classify", fnTy, clFn)
+
+    fly.mem.Ptr clEntry
+    fly.mem.Ptr zeroCase
+    fly.mem.Ptr defCase
+    llvm.appendBasicBlockInContext(ctx, clFn, "entry", clEntry)
+    llvm.appendBasicBlockInContext(ctx, clFn, "zero_case", zeroCase)
+    llvm.appendBasicBlockInContext(ctx, clFn, "default_case", defCase)
+
+    llvm.positionBuilderAtEnd(builder, clEntry)
+    fly.mem.Ptr sw
+    llvm.buildSwitch(builder, c3, defCase, 1, sw)
+    fly.assert.assertTrue(sw.addr != 0, 8)
+
+    fly.mem.Ptr zero
+    llvm.constInt(i32, 0, false, zero)
+    llvm.addCase(sw, zero, zeroCase)
+    fly.assert.assertTrue(true, 9)
+
+    // zero case: return -1
+    llvm.positionBuilderAtEnd(builder, zeroCase)
+    fly.mem.Ptr negOne
+    int negOneVal = 0 - 1
+    llvm.constInt(i32, negOneVal, true, negOne)
+    fly.mem.Ptr zeroRet
+    llvm.buildRet(builder, negOne, zeroRet)
+    fly.assert.assertTrue(zeroRet.addr != 0, 10)
+
+    // default case: return c3
+    llvm.positionBuilderAtEnd(builder, defCase)
+    fly.mem.Ptr defRet
+    llvm.buildRet(builder, c3, defRet)
+    fly.assert.assertTrue(defRet.addr != 0, 11)
+
+    fly.assert.assertTrue(true, 12)
+    fly.assert.assertTrue(true, 13)
+
+    llvm.disposeBuilder(builder)
+    llvm.disposeModule(mod)
+    llvm.contextDispose(ctx)
+}

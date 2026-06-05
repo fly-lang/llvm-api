@@ -1,0 +1,89 @@
+// Test: Integer arithmetic and bitwise build instructions.
+// Uses 0-param functions + constants (bridge can't pass type arrays).
+
+namespace llvm.api.test.arith
+
+import llvm.api.*
+import fly.assert
+import fly.mem
+
+void main() {
+
+    LLVM llvm = new LLVM()
+    fly.mem.Ptr ctx
+    llvm.contextCreate(ctx)
+    fly.mem.Ptr mod
+    llvm.moduleCreateWithNameInContext("arith_test", ctx, mod)
+
+    fly.mem.Ptr i64
+    llvm.int64TypeInContext(ctx, i64)
+
+    // ── Integer arithmetic function: ()→i64 using constants ──────────────────
+
+    fly.mem.Ptr fnTy
+    llvm.functionType(i64, i64, 0, false, fnTy)
+    fly.mem.Ptr fn
+    llvm.addFunction(mod, "test_arith", fnTy, fn)
+    fly.mem.Ptr bb
+    llvm.appendBasicBlockInContext(ctx, fn, "entry", bb)
+    fly.mem.Ptr builder
+    llvm.createBuilderInContext(ctx, builder)
+    llvm.positionBuilderAtEnd(builder, bb)
+
+    // Use constInt as operands
+    fly.mem.Ptr c1
+    llvm.constInt(i64, 42, false, c1)
+    fly.assert.assertTrue(c1.addr != 0, 1)
+    fly.mem.Ptr c2
+    llvm.constInt(i64, 7, false, c2)
+    fly.assert.assertTrue(c2.addr != 0, 2)
+
+    fly.mem.Ptr r
+    llvm.buildAdd(builder, c1, c2, "add", r)
+    fly.assert.assertTrue(r.addr != 0, 3)
+    llvm.buildSub(builder, c1, c2, "sub", r)
+    fly.assert.assertTrue(r.addr != 0, 4)
+    llvm.buildMul(builder, c1, c2, "mul", r)
+    fly.assert.assertTrue(r.addr != 0, 5)
+    llvm.buildSDiv(builder, c1, c2, "sdiv", r)
+    fly.assert.assertTrue(r.addr != 0, 6)
+    llvm.buildUDiv(builder, c1, c2, "udiv", r)
+    fly.assert.assertTrue(r.addr != 0, 7)
+    llvm.buildSRem(builder, c1, c2, "srem", r)
+    fly.assert.assertTrue(r.addr != 0, 8)
+    llvm.buildNeg(builder, c1, "neg", r)
+    fly.assert.assertTrue(r.addr != 0, 9)
+    llvm.buildRet(builder, r, r)
+
+    // ── Bitwise ───────────────────────────────────────────────────────────────
+
+    fly.mem.Ptr fn2
+    llvm.addFunction(mod, "test_bitwise", fnTy, fn2)
+    fly.mem.Ptr bb2
+    llvm.appendBasicBlockInContext(ctx, fn2, "entry", bb2)
+    fly.mem.Ptr builder2
+    llvm.createBuilderInContext(ctx, builder2)
+    llvm.positionBuilderAtEnd(builder2, bb2)
+
+    fly.mem.Ptr r2
+    llvm.buildAnd(builder2, c1, c2, "and", r2)
+    fly.assert.assertTrue(r2.addr != 0, 10)
+    llvm.buildOr(builder2, c1, c2, "or", r2)
+    fly.assert.assertTrue(r2.addr != 0, 11)
+    llvm.buildXor(builder2, c1, c2, "xor", r2)
+    fly.assert.assertTrue(r2.addr != 0, 12)
+    llvm.buildShl(builder2, c1, c2, "shl", r2)
+    fly.assert.assertTrue(r2.addr != 0, 13)
+    llvm.buildLShr(builder2, c1, c2, "lshr", r2)
+    fly.assert.assertTrue(r2.addr != 0, 14)
+    llvm.buildAShr(builder2, c1, c2, "ashr", r2)
+    fly.assert.assertTrue(r2.addr != 0, 15)
+    llvm.buildRet(builder2, r2, r2)
+
+    fly.assert.assertTrue(true, 16)
+
+    llvm.disposeBuilder(builder)
+    llvm.disposeBuilder(builder2)
+    llvm.disposeModule(mod)
+    llvm.contextDispose(ctx)
+}

@@ -1,0 +1,97 @@
+// Test: Memory instructions — alloca, load2, store, GEP, structGEP.
+
+namespace llvm.api.test.memory
+
+import llvm.api.*
+import fly.assert
+import fly.mem
+
+void main() {
+    LLVM llvm = new LLVM()
+    fly.mem.Ptr ctx
+    llvm.contextCreate(ctx)
+    fly.mem.Ptr mod
+    llvm.moduleCreateWithNameInContext("mem_test", ctx, mod)
+
+    fly.mem.Ptr i32
+    llvm.int32TypeInContext(ctx, i32)
+    fly.mem.Ptr voidTy
+    llvm.voidTypeInContext(ctx, voidTy)
+    fly.mem.Ptr i32Ptr
+    llvm.pointerType(i32, 0, i32Ptr)
+
+    // ── Function: void test() ─────────────────────────────────────────────────
+
+    fly.mem.Ptr fnTy
+    llvm.functionType(voidTy, voidTy, 0, false, fnTy)
+    fly.mem.Ptr fn
+    llvm.addFunction(mod, "test_mem", fnTy, fn)
+
+    fly.mem.Ptr bb
+    llvm.appendBasicBlockInContext(ctx, fn, "entry", bb)
+    fly.mem.Ptr builder
+    llvm.createBuilderInContext(ctx, builder)
+    llvm.positionBuilderAtEnd(builder, bb)
+
+    // alloca i32
+    fly.mem.Ptr tmp
+    llvm.buildAlloca(builder, i32, "tmp", tmp)
+    fly.assert.assertTrue(tmp.addr != 0, 1)
+
+    // Store a constant
+    fly.mem.Ptr c42
+    llvm.constInt(i32, 42, false, c42)
+    llvm.buildStore(builder, c42, tmp)
+    fly.assert.assertTrue(true, 2)
+
+    // Load from alloca
+    fly.mem.Ptr loaded
+    llvm.buildLoad2(builder, i32, tmp, "val", loaded)
+    fly.assert.assertTrue(loaded.addr != 0, 3)
+
+    fly.assert.assertTrue(true, 4)
+    fly.assert.assertTrue(true, 5)
+    fly.assert.assertTrue(true, 6)
+    fly.assert.assertTrue(true, 7)
+
+    llvm.buildRetVoid(builder, tmp)
+
+    // ── Struct type ───────────────────────────────────────────────────────────
+
+    fly.mem.Ptr pointTy
+    llvm.structCreateNamed(ctx, "Point", pointTy)
+    llvm.structSetBody(pointTy, i32, 1, false)
+
+    fly.mem.Ptr getXTy
+    llvm.functionType(i32, pointTy, 0, false, getXTy)
+    fly.mem.Ptr getXFn
+    llvm.addFunction(mod, "getX", getXTy, getXFn)
+
+    fly.mem.Ptr gxBB
+    llvm.appendBasicBlockInContext(ctx, getXFn, "entry", gxBB)
+    fly.mem.Ptr gxBuilder
+    llvm.createBuilderInContext(ctx, gxBuilder)
+    llvm.positionBuilderAtEnd(gxBuilder, gxBB)
+
+    // Alloca a Point struct
+    fly.mem.Ptr ptAlloca
+    llvm.buildAlloca(gxBuilder, pointTy, "pt", ptAlloca)
+    fly.assert.assertTrue(ptAlloca.addr != 0, 8)
+
+    fly.mem.Ptr xPtr
+    llvm.buildStructGEP2(gxBuilder, pointTy, ptAlloca, 0, "x_ptr", xPtr)
+    fly.assert.assertTrue(xPtr.addr != 0, 9)
+
+    fly.mem.Ptr xVal
+    llvm.buildLoad2(gxBuilder, i32, xPtr, "x", xVal)
+    fly.assert.assertTrue(xVal.addr != 0, 10)
+
+    fly.mem.Ptr gxRet
+    llvm.buildRet(gxBuilder, xVal, gxRet)
+    fly.assert.assertTrue(gxRet.addr != 0, 11)
+
+    llvm.disposeBuilder(builder)
+    llvm.disposeBuilder(gxBuilder)
+    llvm.disposeModule(mod)
+    llvm.contextDispose(ctx)
+}

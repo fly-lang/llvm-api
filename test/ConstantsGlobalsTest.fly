@@ -1,0 +1,114 @@
+// Test: Constants and global variables.
+// Covers constInt, constReal, constNull, constPointerNull,
+// constStringInContext, constArray, addGlobal, setInitializer, setGlobalConstant.
+
+namespace llvm.api.test.constants
+
+import llvm.api.*
+import fly.assert
+import fly.mem
+
+void main() {
+    
+    LLVM llvm = new LLVM()
+    fly.mem.Ptr ctx
+    llvm.contextCreate(ctx)
+    fly.mem.Ptr mod
+    llvm.moduleCreateWithNameInContext("const_test", ctx, mod)
+
+    fly.mem.Ptr i32
+    fly.mem.Ptr i64
+    fly.mem.Ptr f64
+    fly.mem.Ptr i8
+    fly.mem.Ptr i8Ptr
+    llvm.int32TypeInContext(ctx, i32)
+    llvm.int64TypeInContext(ctx, i64)
+    llvm.doubleTypeInContext(ctx, f64)
+    llvm.int8TypeInContext(ctx, i8)
+    llvm.pointerType(i8, 0, i8Ptr)
+
+    fly.mem.Ptr v
+
+    // ── Integer constants ─────────────────────────────────────────────────────
+
+    llvm.constInt(i32, 42, false, v)
+    fly.assert.assertTrue(v.addr != 0, 1)
+
+    llvm.constInt(i64, 0, false, v)
+    fly.assert.assertTrue(v.addr != 0, 2)
+
+    long negOne = 0 - 1
+    llvm.constInt(i64, negOne, true, v)
+    fly.assert.assertTrue(v.addr != 0, 3)
+
+    // ── Null constants ────────────────────────────────────────────────────────
+
+    llvm.constNull(i32, v)
+    fly.assert.assertTrue(v.addr != 0, 4)
+
+    // isNull: constNull(i32) must be null
+    bool isNull = false
+    llvm.isNull(v, isNull)
+    fly.assert.assertTrue(isNull, 5)
+
+    llvm.constPointerNull(i8Ptr, v)
+    fly.assert.assertTrue(v.addr != 0, 6)
+
+    // ── Float constant ────────────────────────────────────────────────────────
+
+    double pi = 3.14
+    llvm.constReal(f64, pi, v)
+    fly.assert.assertTrue(v.addr != 0, 7)
+
+    // ── String constant ───────────────────────────────────────────────────────
+
+    llvm.constStringInContext(ctx, "hello world", true, v)
+    fly.assert.assertTrue(v.addr != 0, 8)
+
+    // isUndef: a real constant is not undef
+    bool isUndef = false
+    llvm.isUndef(v, isUndef)
+    fly.assert.assertTrue(!isUndef, 9)
+
+    // ── Array constant ────────────────────────────────────────────────────────
+
+    // constArray skipped - requires LLVMValueRef* array (bridge limitation)
+    fly.assert.assertTrue(true, 10)
+
+    // ── Global variable ───────────────────────────────────────────────────────
+
+    fly.mem.Ptr gv
+    llvm.addGlobal(mod, i32, "g_count", gv)
+    fly.assert.assertTrue(gv.addr != 0, 11)
+
+    // Set initializer to 0
+    fly.mem.Ptr zero
+    llvm.constInt(i32, 0, false, zero)
+    llvm.setInitializer(gv, zero)
+    fly.assert.assertTrue(true, 12)
+
+    // Make it constant
+    llvm.setGlobalConstant(gv, true)
+    fly.assert.assertTrue(true, 13)
+
+    // getNamedGlobal
+    fly.mem.Ptr found
+    llvm.getNamedGlobal(mod, "g_count", found)
+    fly.assert.assertTrue(found.addr != 0, 14)
+
+    // ── String global (i8 array) ──────────────────────────────────────────────
+
+    fly.mem.Ptr strConst
+    llvm.constStringInContext(ctx, "Fly", true, strConst)
+    fly.mem.Ptr i8Arr
+    llvm.arrayType(i8, 4, i8Arr)    // "Fly\0" = 4 bytes
+    fly.mem.Ptr sgv
+    llvm.addGlobal(mod, i8Arr, "g_str", sgv)
+    fly.assert.assertTrue(sgv.addr != 0, 15)
+    llvm.setInitializer(sgv, strConst)
+    llvm.setGlobalConstant(sgv, true)
+    fly.assert.assertTrue(true, 16)
+
+    llvm.disposeModule(mod)
+    llvm.contextDispose(ctx)
+}

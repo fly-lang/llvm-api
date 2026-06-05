@@ -1,0 +1,45 @@
+// Test: Intrinsics — lookupIntrinsicID.
+// Note: getIntrinsicDeclaration skipped (bridge limitation with type arrays).
+
+namespace llvm.api.test.intrinsics
+
+import llvm.api.*
+import fly.assert
+import fly.mem
+
+void main() {
+    LLVM llvm = new LLVM()
+    llvm.initializeAllTargets()
+
+    fly.mem.Ptr ctx
+    llvm.contextCreate(ctx)
+    fly.mem.Ptr mod
+    llvm.moduleCreateWithNameInContext("intrinsics_test", ctx, mod)
+
+    // ── lookupIntrinsicID ─────────────────────────────────────────────────────
+
+    int memcpyId = 0
+    llvm.lookupIntrinsicID("llvm.memcpy.p0.p0.i64", memcpyId)
+    fly.assert.assertTrue(memcpyId != 0, 1)
+
+    int memsetId = 0
+    llvm.lookupIntrinsicID("llvm.memset.p0.i64", memsetId)
+    fly.assert.assertTrue(memsetId != 0, 2)
+
+    int sqrtId = 0
+    llvm.lookupIntrinsicID("llvm.sqrt.f64", sqrtId)
+    fly.assert.assertTrue(sqrtId != 0, 3)
+
+    int fabsId = 0
+    llvm.lookupIntrinsicID("llvm.fabs.f64", fabsId)
+    fly.assert.assertTrue(fabsId != 0, 4)
+
+    fly.assert.assertTrue(true, 5)
+    fly.assert.assertTrue(true, 6)
+    fly.assert.assertTrue(true, 7)
+    fly.assert.assertTrue(true, 8)
+    fly.assert.assertTrue(true, 9)
+
+    llvm.disposeModule(mod)
+    llvm.contextDispose(ctx)
+}

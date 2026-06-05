@@ -1,0 +1,35 @@
+[package]
+name        = "llvm-api"
+version     = "0.1.0"
+description = "Fly bindings for the LLVM C API 20.1.8 via fly.bridge.CLang"
+license     = "Apache-2.0"
+fly-version = "0.13.0"
+authors     = ["Dev <dev@flylang.org>"]
+repository  = "https://github.com/flylang/fly-llvm-api"
+
+# ── targets ───────────────────────────────────────────────────────────────────
+# Dynamic library so the LLVM shared lib is loaded at link time.
+# The CLang bridge calls LLVMInit* at startup via the lib path below.
+
+[targets]
+llvm-api = { path = "src/llvm-api.fly", lib = "static" }
+
+# ── test ─────────────────────────────────────────────────────────────────────
+
+[test]
+suites    = ["test/**/*.fly"]
+parallel  = false
+fail_fast = false
+
+# ── native link ──────────────────────────────────────────────────────────────
+# External C libraries required at link time for any binary that uses this package.
+# flyp passes these flags to the fly compiler linker for both normal and test builds.
+
+[link]
+libs = ["LLVM-20"]
+
+# ── profiles ──────────────────────────────────────────────────────────────────
+
+[profiles]
+debug   = { opt-level = 0, debug-info = true,  assertions = true,  lto = false, strip = false }
+release = { opt-level = 3, debug-info = false, assertions = false, lto = false, strip = false }
