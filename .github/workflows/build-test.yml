@@ -32,8 +32,7 @@ jobs:
             -R fly-lang/fly \
             -p "fly-${{ env.FLY_VERSION }}-linux-x86_64.tar.gz"
           sudo tar -xzf fly-${{ env.FLY_VERSION }}-linux-x86_64.tar.gz \
-            -C /usr/local \
-            --strip-components=1
+            -C /usr/local/bin
 
       - name: Build with flyp
         run: flyp build --release
