@@ -35,8 +35,11 @@ jobs:
           gh release download v${{ env.FLY_VERSION }} `
             -R fly-lang/fly `
             -p "fly-${{ env.FLY_VERSION }}-win-x64.zip"
-          Expand-Archive "fly-${{ env.FLY_VERSION }}-win-x64.zip" -DestinationPath "$env:USERPROFILE\fly"
-          Add-Content $env:GITHUB_PATH "$env:USERPROFILE\fly\bin"
+          Expand-Archive "fly-${{ env.FLY_VERSION }}-win-x64.zip" -DestinationPath "C:\fly"
 
       - name: Run Build & Test
-        run: flyp test
+        shell: pwsh
+        run: |
+          $env:PATH = "C:\fly\bin;C:\Program Files\LLVM\bin;$env:PATH"
+          $env:LIB  = "C:\Program Files\LLVM\lib;$env:LIB"
+          flyp test
