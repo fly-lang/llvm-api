@@ -27,6 +27,15 @@ jobs:
           Add-Content $env:GITHUB_PATH "C:\Program Files\LLVM\bin"
           Add-Content $env:GITHUB_ENV "LIB=C:\Program Files\LLVM\lib;$($env:LIB)"
 
+      - name: Alias LLVM import library to match Linux naming convention
+        shell: pwsh
+        run: |
+          # The fly linker derives the DLL name from libLLVM-20.so automatically.
+          # The only mismatch is the import library: installer ships LLVM-C.lib
+          # but fly.toml declares libs = ["LLVM-20"], so create an alias.
+          Copy-Item "C:\Program Files\LLVM\lib\LLVM-C.lib" `
+                    "C:\Program Files\LLVM\lib\LLVM-20.lib"
+
       - name: Download Fly release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
