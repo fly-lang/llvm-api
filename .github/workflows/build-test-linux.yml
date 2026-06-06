@@ -35,8 +35,5 @@ jobs:
             -C /usr/local
           sudo chmod +x /usr/local/bin/fly*
 
-      - name: Build with flyp
-        run: flyp build --release
-
-      - name: Run tests
+      - name: Run Build & Test
         run: flyp test

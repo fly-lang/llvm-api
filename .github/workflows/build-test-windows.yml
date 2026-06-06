@@ -38,8 +38,5 @@ jobs:
           Expand-Archive "fly-${{ env.FLY_VERSION }}-win-x64.zip" -DestinationPath "$env:USERPROFILE\fly"
           Add-Content $env:GITHUB_PATH "$env:USERPROFILE\fly\bin"
 
-      - name: Build with flyp
-        run: flyp build --release
-
-      - name: Run tests
+      - name: Run Build & Test
         run: flyp test
