@@ -19,7 +19,13 @@ jobs:
 
       - name: Install LLVM 20
         shell: pwsh
-        run: choco install llvm --version=20.1.8 -y
+        run: |
+          Invoke-WebRequest `
+            "https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.8/LLVM-20.1.8-win64.exe" `
+            -OutFile "llvm-installer.exe"
+          Start-Process -Wait -FilePath "llvm-installer.exe" -ArgumentList "/S"
+          Add-Content $env:GITHUB_PATH "C:\Program Files\LLVM\bin"
+          Add-Content $env:GITHUB_ENV "LIB=C:\Program Files\LLVM\lib;$($env:LIB)"
 
       - name: Download Fly release
         env:
