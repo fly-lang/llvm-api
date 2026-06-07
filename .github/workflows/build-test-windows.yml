@@ -49,4 +49,5 @@ jobs:
       - name: Run Build & Test
         shell: pwsh
         run: |
+          $env:PATH = "C:\fly\bin;C:\Program Files\LLVM\bin;$env:PATH"
           flyp test
