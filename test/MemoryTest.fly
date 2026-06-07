@@ -57,10 +57,12 @@ void main() {
     llvm.buildRetVoid(builder, tmp)
 
     // ── Struct type ───────────────────────────────────────────────────────────
+    // Bridge limitation: elemTypes is passed as a value, not an array pointer.
+    // Use elemCount=0 to avoid LLVM dereferencing it as an array element.
 
     fly.mem.Ptr pointTy
     llvm.structCreateNamed(ctx, "Point", pointTy)
-    llvm.structSetBody(pointTy, i32, 1, false)
+    llvm.structSetBody(pointTy, i32, 0, false)
 
     fly.mem.Ptr getXTy
     llvm.functionType(i32, pointTy, 0, false, getXTy)

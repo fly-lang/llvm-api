@@ -152,6 +152,14 @@ struct PtrDoubleArgs : Args {
     double d
 }
 
+// PtrStrIntArgs: ptr + string + int — gives C args (ptr, str_ptr, str_len, n).
+// Used for functions like LLVMConstStringInContext where the 4th arg is an int flag.
+struct PtrStrIntArgs : Args {
+    fly.mem.Ptr a
+    string s
+    int n
+}
+
 // ── LLVM wrapper ──────────────────────────────────────────────────────────────
 
 public class LLVM {
@@ -1009,9 +1017,12 @@ public class LLVM {
     }
 
     public void constStringInContext(const fly.mem.Ptr ctx, const string str, const bool nullTerminated, fly.mem.Ptr v) {
-        PtrStrArgs a = new PtrStrArgs()
+        // LLVMConstStringInContext(Ctx, Str, Length, DontNullTerminate)
+        // DontNullTerminate=0 means ADD null terminator (nullTerminated=true).
+        PtrStrIntArgs a = new PtrStrIntArgs()
         a.a = ctx
         a.s = str
+        if nullTerminated { a.n = 0 } else { a.n = 1 }
         CLang lib = new CLang("libLLVM-20.so")
         lib.call("LLVMConstStringInContext", a, v)
     }
