@@ -46,12 +46,7 @@ jobs:
             -p "fly-${{ env.FLY_VERSION }}-win-x64.zip"
           Expand-Archive "fly-${{ env.FLY_VERSION }}-win-x64.zip" -DestinationPath "C:\fly"
 
-      - name: Setup MSVC environment
-        uses: ilammy/msvc-dev-cmd@v1
-
       - name: Run Build & Test
         shell: pwsh
         run: |
-          $env:PATH = "C:\fly\bin;C:\Program Files\LLVM\bin;$env:PATH"
-          $env:LIB  = "C:\Program Files\LLVM\lib;$env:LIB"
           flyp test
